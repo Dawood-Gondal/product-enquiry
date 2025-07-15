@@ -1,0 +1,107 @@
+<?php
+/**
+ * @copyright Copyright (c) 2024 Magebit (https://magebit.com/)
+ * @author    <info@magebit.com>
+ * @license   GNU General Public License ("GPL") v3.0
+ */
+
+declare(strict_types=1);
+
+use Magento\Framework\Escaper;
+use BugsBunny\Lookingfor\Block\Form;
+
+/** @var Form $block */
+/** @var Escaper $escaper */
+?>
+
+<script>
+    function lookingForForm() {
+        return {
+            init: function() {
+                this.lookingForButtonDisabled = false;
+            },
+            async submitForm(event) {
+                this.lookingForButtonDisabled = true;
+
+                const form = event.target;
+                const formData = new FormData(form);
+                const actionUrl = form.action;
+
+                try {
+                    const response = await fetch(actionUrl, {
+                        method: 'POST',
+                        body: formData,
+                    });
+
+                    const result = await response.json();
+                    if (result.result === true) {
+                        window.dispatchMessages([{
+                            type: 'success',
+                            text: '<?= $escaper->escapeHtml(
+                                __("Thank you for submitting your request.")
+                            ); ?>'
+                        }])
+                    } else {
+                        window.dispatchMessages([{
+                            type: 'error',
+                            text: '<?= $escaper->escapeHtml(
+                                __("An error occurred - your request was not sent.")
+                            ); ?>'
+                        }])
+                    }
+
+                    if (result.result) {
+                        form.reset();
+                    }
+                } catch (error) {
+                    window.dispatchMessages([{
+                        type: 'error',
+                        text: '<?= $escaper->escapeHtml(__("An error occurred - your request was not sent.")); ?>'
+                    }])
+                }
+                this.lookingForButtonDisabled = false;
+            }
+        }
+    }
+</script>
+
+<div x-data="lookingForForm()" class="max-lg:hidden bg-gray-100 p-6">
+    <div id="lookingfor-ajax-overlay"></div>
+    <span class="title-sm font-medium">
+        <?= $escaper->escapeHtml(__("Please tell us the name of product you couldn't find in here")); ?>
+    </span>
+    <form name="lookingforform"
+          method="post"
+          id="form-lookingforform"
+          action="<?= $escaper->escapeUrl($block->getUrl('lookingfor/index/index')) ?>"
+          @submit.prevent="submitForm"
+    >
+        <?= /** @noEscape */ $block->getBlockHtml('formkey') ?>
+        <div id='result-lookingforform'></div>
+        <div class="field field-reserved !mb-0">
+            <label class="normal-input text-sm" for="comment">
+                <?= $escaper->escapeHtml(
+                    __("I was looking for")
+                ); ?>
+            </label>
+            <div class="control text-sm mt-5">
+                <input placeholder="Product name"
+                       name="comment" id="comment"
+                       title="<?= $escaper->escapeHtml(__('Comment')) ?>"
+                       class="form-input w-full"
+                       type="text"
+                       data-validate="{required:true}">
+                <input type="hidden" name="hideit" id="hideit" value="" />
+                <button :disabled="lookingForButtonDisabled"
+                        :class="{'loading': lookingForButtonDisabled}"
+                        name="button-lookingfor"
+                        title="<?= $escaper->escapeHtml(__('Submit item request')) ?>"
+                        class="btn btn-secondary w-full mt-5"
+                        type="submit">
+                    <span><?= $escaper->escapeHtml(__('Contact Us')) ?></span>
+                    <span :show="lookingForButtonDisabled" class="loader"></span>
+                </button>
+            </div>
+        </div>
+    </form>
+</div>

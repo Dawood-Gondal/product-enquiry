@@ -1,0 +1,27 @@
+{
+    "name": "bugsbunny/looking-for",
+    "description": "Display discount percentage on product price for Magento 2.4.7",
+    "require": {
+        "php": "^8.3",
+        "magento/framework": "103.0.*"
+    },
+    "type": "magento2-module",
+    "version": "1.0.0",
+    "license": [
+        "proprietary"
+    ],
+    "authors": [
+        {
+            "name" : "Dawood Gondal",
+            "email" : "dawoodgondaldev@gmail.com"
+        }
+    ],
+    "autoload": {
+        "files": [
+            "registration.php"
+        ],
+        "psr-4": {
+            "BugsBunny\\Lookingfor\\": ""
+        }
+    }
+}
