@@ -1,7 +1,7 @@
 var config = {
     map: {
         '*': {
-            'lookingfor':'BugsBunny_Lookingfor/js/lookingfor'
+            'lookingfor':'BugsBunny_LookingFor/js/lookingfor'
         }
     }
 }
