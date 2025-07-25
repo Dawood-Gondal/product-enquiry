@@ -8,7 +8,7 @@
         <section id="lookingfor" translate="label" type="text" sortOrder="300" showInDefault="1" showInWebsite="1" showInStore="1">
             <label>Looking for</label>
             <tab>bugsbunny</tab>
-            <resource>BugsBunny_Lookingfor::config</resource>
+            <resource>BugsBunny_LookingFor::config</resource>
             <group id="options" translate="label" type="text" sortOrder="10" showInDefault="1" showInWebsite="1" showInStore="1">
                 <label>General</label>
                 <field id="active" translate="label" type="select" sortOrder="10" showInDefault="1" showInWebsite="1" showInStore="1">

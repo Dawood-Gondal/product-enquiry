@@ -1,8 +1,8 @@
 {
     "name": "bugsbunny/looking-for",
-    "description": "Display discount percentage on product price for Magento 2.4.7",
+    "description": "Display discount percentage on product price for Magento 2",
     "require": {
-        "php": "^8.3",
+        "php": "^8.1 || ^8.2 || ^8.3",
         "magento/framework": "103.0.*"
     },
     "type": "magento2-module",
@@ -21,7 +21,7 @@
             "registration.php"
         ],
         "psr-4": {
-            "BugsBunny\\Lookingfor\\": ""
+            "BugsBunny\\LookingFor\\": ""
         }
     }
 }

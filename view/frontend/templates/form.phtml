@@ -8,7 +8,7 @@
 declare(strict_types=1);
 
 use Magento\Framework\Escaper;
-use BugsBunny\Lookingfor\Block\Form;
+use BugsBunny\LookingFor\Block\Form;
 
 /** @var Form $block */
 /** @var Escaper $escaper */
@@ -65,7 +65,7 @@ use BugsBunny\Lookingfor\Block\Form;
     }
 </script>
 
-<div x-data="lookingForForm()" class="max-lg:hidden bg-gray-100 p-6">
+<div x-data="lookingForForm()" class="lookingfor-form-wrapper" >
     <div id="lookingfor-ajax-overlay"></div>
     <span class="title-sm font-medium">
         <?= $escaper->escapeHtml(__("Please tell us the name of product you couldn't find in here")); ?>
@@ -76,27 +76,26 @@ use BugsBunny\Lookingfor\Block\Form;
           action="<?= $escaper->escapeUrl($block->getUrl('lookingfor/index/index')) ?>"
           @submit.prevent="submitForm"
     >
-        <?= /** @noEscape */ $block->getBlockHtml('formkey') ?>
+        <?= $block->getFormKeyHtml() ?>
         <div id='result-lookingforform'></div>
-        <div class="field field-reserved !mb-0">
+        <div class="field field-reserved input-wrapper">
             <label class="normal-input text-sm" for="comment">
-                <?= $escaper->escapeHtml(
-                    __("I was looking for")
-                ); ?>
+                <?= $escaper->escapeHtml(__("I was looking for")) ?>
             </label>
-            <div class="control text-sm mt-5">
+            <div class="control input-group">
                 <input placeholder="Product name"
-                       name="comment" id="comment"
+                       name="comment"
+                       id="comment"
                        title="<?= $escaper->escapeHtml(__('Comment')) ?>"
-                       class="form-input w-full"
+                       class="form-input"
                        type="text"
-                       data-validate="{required:true}">
+                       data-validate="{required:true}" />
                 <input type="hidden" name="hideit" id="hideit" value="" />
                 <button :disabled="lookingForButtonDisabled"
                         :class="{'loading': lookingForButtonDisabled}"
                         name="button-lookingfor"
                         title="<?= $escaper->escapeHtml(__('Submit item request')) ?>"
-                        class="btn btn-secondary w-full mt-5"
+                        class="contact-button"
                         type="submit">
                     <span><?= $escaper->escapeHtml(__('Contact Us')) ?></span>
                     <span :show="lookingForButtonDisabled" class="loader"></span>
