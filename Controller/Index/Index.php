@@ -17,8 +17,8 @@ use Magento\Framework\App\Action\Context;
 use Magento\Framework\App\Area;
 use Magento\Framework\App\Config\ScopeConfigInterface;
 use Magento\Framework\App\ResponseInterface;
-use Magento\Framework\Controller\Result\Json;
 use Magento\Framework\Controller\Result\JsonFactory;
+use Magento\Framework\Controller\Result\Redirect;
 use Magento\Framework\Controller\ResultInterface;
 use Magento\Framework\Escaper;
 use Magento\Framework\Mail\Template\TransportBuilder;
@@ -26,7 +26,6 @@ use Magento\Framework\Message\ManagerInterface;
 use Magento\Framework\Translate\Inline\StateInterface;
 use Magento\Store\Model\Store;
 use Magento\Store\Model\StoreManagerInterface;
-
 
 class Index extends Action
 {
@@ -93,14 +92,13 @@ class Index extends Action
     }
 
     /**
-     * @return ResponseInterface|\Magento\Framework\Controller\Result\Redirect|ResultInterface
+     * @return ResponseInterface|Redirect|ResultInterface
      */
     public function execute()
     {
         $refererUrl = $this->_redirect->getRefererUrl();
 
         $comment = $this->getRequest()->getParam('comment');
-
         if (!$comment) {
             $this->messageManager->addErrorMessage(__('We were unable to submit your request.'));
         } else {
@@ -127,12 +125,11 @@ class Index extends Action
             $senderIdentity = $this->_helper->getConfigData('productenquiry/email/sender_email_identity');
             $sender = ['name' => $this->scopeConfig->getValue("trans_email/ident_{$senderIdentity}/name"), 'email' => $this->scopeConfig->getValue("trans_email/ident_{$senderIdentity}/email")];
             $templateId = $this->_helper->getConfigData('productenquiry/email/email_template');
-            $transport = $this->_transportBuilder->setTemplateIdentifier($templateId)->setTemplateOptions(['area' => Area::AREA_FRONTEND, 'store' => Store::DEFAULT_STORE_ID,])->setTemplateVars(['comment' => $comment])->setFromByScope($sender)->addTo($recipientEmail)->getTransport();
+            $transport = $this->_transportBuilder->setTemplateIdentifier($templateId)->setTemplateOptions(['area' => Area::AREA_FRONTEND, 'store' => Store::DEFAULT_STORE_ID])->setTemplateVars(['comment' => $comment])->setFromByScope($sender)->addTo($recipientEmail)->getTransport();
             $transport->sendMessage();
 
         } catch (Exception $e) {
             $result = false;
-            // Optionally log: error_log($e->getMessage());
         }
 
         return $result;
