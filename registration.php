@@ -3,5 +3,5 @@ use \Magento\Framework\Component\ComponentRegistrar;
 
 ComponentRegistrar::register(
     ComponentRegistrar::MODULE,
-    'BugsBunny_Lookingfor',
+    'M2Commerce_ProductEnquiry',
     __DIR__);

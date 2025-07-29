@@ -1,27 +1,29 @@
 <?php
 /**
- * @copyright Copyright (c) 2024 Magebit (https://magebit.com/)
- * @author    <info@magebit.com>
- * @license   GNU General Public License ("GPL") v3.0
+ * @category    M2Commerce Enterprise
+ * @package     M2Commerce_ProductEnquiry
+ * @copyright   Copyright (c) 2025 M2Commerce
+ * @author      dawood
  */
 
 declare(strict_types=1);
 
 use Magento\Framework\Escaper;
-use BugsBunny\Lookingfor\Block\Form;
+use M2Commerce\ProductEnquiry\Block\Form;
 
 /** @var Form $block */
 /** @var Escaper $escaper */
 ?>
 
 <script>
-    function lookingForForm() {
+    function productEnquiryForm() {
         return {
-            init: function() {
-                this.lookingForButtonDisabled = false;
-            },
+            productEnquiryButtonDisabled: false,
             async submitForm(event) {
-                this.lookingForButtonDisabled = true;
+                event.preventDefault(); // Prevent default submit
+                this.productEnquiryButtonDisabled = true;
+                document.getElementById('productenquiry-submit-btn').classList.add('loading');
+
 
                 const form = event.target;
                 const formData = new FormData(form);
@@ -34,21 +36,13 @@ use BugsBunny\Lookingfor\Block\Form;
                     });
 
                     const result = await response.json();
-                    if (result.result === true) {
-                        window.dispatchMessages([{
-                            type: 'success',
-                            text: '<?= $escaper->escapeHtml(
-                                __("Thank you for submitting your request.")
-                            ); ?>'
-                        }])
-                    } else {
-                        window.dispatchMessages([{
-                            type: 'error',
-                            text: '<?= $escaper->escapeHtml(
-                                __("An error occurred - your request was not sent.")
-                            ); ?>'
-                        }])
-                    }
+
+                    window.dispatchMessages([{
+                        type: result.result ? 'success' : 'error',
+                        text: result.result
+                            ? '<?= $escaper->escapeHtml(__("Thank you for submitting your request.")); ?>'
+                            : '<?= $escaper->escapeHtml(__("An error occurred - your request was not sent.")); ?>'
+                    }]);
 
                     if (result.result) {
                         form.reset();
@@ -57,49 +51,53 @@ use BugsBunny\Lookingfor\Block\Form;
                     window.dispatchMessages([{
                         type: 'error',
                         text: '<?= $escaper->escapeHtml(__("An error occurred - your request was not sent.")); ?>'
-                    }])
+                    }]);
                 }
-                this.lookingForButtonDisabled = false;
+                document.getElementById('productenquiry-submit-btn').classList.remove('loading');
+                this.productEnquiryButtonDisabled = false;
             }
-        }
+        };
     }
 </script>
 
-<div x-data="lookingForForm()" class="max-lg:hidden bg-gray-100 p-6">
-    <div id="lookingfor-ajax-overlay"></div>
+<div class="product-enq-main">
     <span class="title-sm font-medium">
         <?= $escaper->escapeHtml(__("Please tell us the name of product you couldn't find in here")); ?>
     </span>
-    <form name="lookingforform"
+
+    <div data-bind="scope: 'messages'">
+        <div class="messages" data-bind="visible: messageList().length">
+            <div role="alert" class="message" data-bind="foreach: { data: messageList, as: 'message' }">
+                <div data-bind="css: message.type, text: message.text"></div>
+            </div>
+        </div>
+    </div>
+
+    <form name="productenquiryform"
           method="post"
-          id="form-lookingforform"
-          action="<?= $escaper->escapeUrl($block->getUrl('lookingfor/index/index')) ?>"
-          @submit.prevent="submitForm"
-    >
-        <?= /** @noEscape */ $block->getBlockHtml('formkey') ?>
-        <div id='result-lookingforform'></div>
-        <div class="field field-reserved !mb-0">
+          action="<?= $escaper->escapeUrl($block->getUrl('productenquiry/index/index')) ?>"
+          x-data="productEnquiryForm()"
+          @submit="submitForm">
+
+        <div class="Product-Sb-btn">
             <label class="normal-input text-sm" for="comment">
-                <?= $escaper->escapeHtml(
-                    __("I was looking for")
-                ); ?>
+                <?= $escaper->escapeHtml(__("I was looking for")); ?>
             </label>
             <div class="control text-sm mt-5">
                 <input placeholder="Product name"
-                       name="comment" id="comment"
+                       name="comment"
+                       id="comment"
                        title="<?= $escaper->escapeHtml(__('Comment')) ?>"
                        class="form-input w-full"
                        type="text"
-                       data-validate="{required:true}">
-                <input type="hidden" name="hideit" id="hideit" value="" />
-                <button :disabled="lookingForButtonDisabled"
-                        :class="{'loading': lookingForButtonDisabled}"
-                        name="button-lookingfor"
-                        title="<?= $escaper->escapeHtml(__('Submit item request')) ?>"
+                       required>
+
+                <button id="productenquiry-submit-btn"
                         class="btn btn-secondary w-full mt-5"
-                        type="submit">
+                        type="submit"
+                        :disabled="productEnquiryButtonDisabled">
                     <span><?= $escaper->escapeHtml(__('Contact Us')) ?></span>
-                    <span :show="lookingForButtonDisabled" class="loader"></span>
+                    <span class="loader" style="display:none;"></span>
                 </button>
             </div>
         </div>

@@ -1,4 +1,15 @@
 <?xml version="1.0"?>
-<config xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="urn:magento:module:Magento_Email:etc/email_templates.xsd">
-     <template id="lookingfor_email_email_template" label="Looking for" file="lookingfor_email.html" type="html" module="BugsBunny_Lookingfor" area="frontend"/>
+<!--
+/**
+ * @category    M2Commerce Enterprise
+ * @package     M2Commerce_YoutubeWidget
+ * @copyright   Copyright (c) 2025 M2Commerce Enterprise
+ * @author      dawoodgondaldev@gmail.com
+ */
+-->
+
+<config xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:noNamespaceSchemaLocation="urn:magento:module:Magento_Email:etc/email_templates.xsd">
+    <template id="productenquiry_email_email_template" label="Product Enquiry" file="productenquiry_email.html" type="html"
+              module="M2Commerce_ProductEnquiry" area="frontend"/>
 </config>

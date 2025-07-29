@@ -1,52 +1,85 @@
 <?php
-namespace BugsBunny\Lookingfor\Controller\Index;
+/**
+ * @category    M2Commerce Enterprise
+ * @package     M2Commerce_OrderComment
+ * @copyright   Copyright (c) 2025 M2Commerce Enterprise
+ * @author      dawoodgondaldev@gmail.com
+ */
 
+declare(strict_types=1);
+
+namespace M2Commerce\ProductEnquiry\Controller\Index;
+
+use Exception;
+use M2Commerce\ProductEnquiry\Helper\Data;
 use Magento\Framework\App\Action\Action;
-use BugsBunny\Lookingfor\Model\ConfigInterface;
-use BugsBunny\Lookingfor\Helper\Data;
+use Magento\Framework\App\Action\Context;
+use Magento\Framework\App\Area;
+use Magento\Framework\App\Config\ScopeConfigInterface;
+use Magento\Framework\App\ResponseInterface;
+use Magento\Framework\Controller\Result\Json;
+use Magento\Framework\Controller\Result\JsonFactory;
+use Magento\Framework\Controller\ResultInterface;
+use Magento\Framework\Escaper;
+use Magento\Framework\Mail\Template\TransportBuilder;
+use Magento\Framework\Message\ManagerInterface;
+use Magento\Framework\Translate\Inline\StateInterface;
+use Magento\Store\Model\Store;
+use Magento\Store\Model\StoreManagerInterface;
+
 
 class Index extends Action
 {
-    private $lookingforConfig;
-
-    private $_jsonFactory;
-
     /**
-     * @var \Magento\Framework\Mail\Template\TransportBuilder
+     * @var TransportBuilder
      */
     protected $_transportBuilder;
-
     /**
-     * @var \Magento\Framework\Translate\Inline\StateInterface
+     * @var StateInterface
      */
     protected $inlineTranslation;
-
     /**
-     * @var \Magento\Framework\App\Config\ScopeConfigInterface
+     * @var ScopeConfigInterface
      */
     protected $scopeConfig;
-
     /**
-     * @var \Magento\Store\Model\StoreManagerInterface
+     * @var StoreManagerInterface
      */
     protected $storeManager;
     /**
-     * @var \Magento\Framework\Escaper
+     * @var Escaper
      */
     protected $_escaper;
-
+    /**
+     * @var Data
+     */
     protected $_helper;
+    /**
+     * @var ManagerInterface
+     */
+    protected $messageManager;
+    /**
+     * @var
+     */
+    private $lookingforConfig;
+    /**
+     * @var JsonFactory
+     */
+    private $_jsonFactory;
 
-    public function __construct(
-        \Magento\Framework\App\Action\Context $context,
-        \Magento\Framework\Mail\Template\TransportBuilder $transportBuilder,
-        \Magento\Framework\Translate\Inline\StateInterface $inlineTranslation,
-        \Magento\Framework\App\Config\ScopeConfigInterface $scopeConfig,
-        \Magento\Store\Model\StoreManagerInterface $storeManager,
-        \Magento\Framework\Escaper $escaper,
-        \Magento\Framework\Controller\Result\JsonFactory $jsonFactory,
-        Data $helper
-    ) {
+    /**
+     * @param Context $context
+     * @param TransportBuilder $transportBuilder
+     * @param StateInterface $inlineTranslation
+     * @param ScopeConfigInterface $scopeConfig
+     * @param StoreManagerInterface $storeManager
+     * @param Escaper $escaper
+     * @param JsonFactory $jsonFactory
+     * @param Data $helper
+     * @param ManagerInterface $messageManager
+     */
+    public function __construct(Context $context, TransportBuilder $transportBuilder, StateInterface $inlineTranslation, ScopeConfigInterface $scopeConfig, StoreManagerInterface $storeManager, Escaper $escaper, JsonFactory $jsonFactory, Data $helper, ManagerInterface $messageManager)
+    {
         parent::__construct($context);
         $this->_jsonFactory = $jsonFactory;
         $this->_transportBuilder = $transportBuilder;
@@ -55,60 +88,53 @@ class Index extends Action
         $this->storeManager = $storeManager;
         $this->_escaper = $escaper;
         $this->_helper = $helper;
+        $this->messageManager = $messageManager;
+
     }
 
-
+    /**
+     * @return ResponseInterface|\Magento\Framework\Controller\Result\Redirect|ResultInterface
+     */
     public function execute()
     {
-        $responseJson = $this->_jsonFactory->create();
-        $result = ['message' => '', 'result' => ''];
+        $refererUrl = $this->_redirect->getRefererUrl();
 
         $comment = $this->getRequest()->getParam('comment');
-        if (!empty($comment)) {
-            // Retrieve your form data
-            $result['result'] = true;
-            $sent = $this->_sendEmail($comment);
-            if (!$sent) {
-                $result['result'] = false;
-                $result['message'] = "We were unable to submit your request.";
-            } else {
-                $result['message'] = "Thank you for submitting your request.";
-            }
+
+        if (!$comment) {
+            $this->messageManager->addErrorMessage(__('We were unable to submit your request.'));
         } else {
-            $result['message'] = 'Input box is empty. Please, Fill in the input box';
-            $result['result'] = false;
+            $this->_sendEmail($comment);
+            $this->messageManager->addSuccessMessage(__('Thank you for submitting your request: "%1"', $comment));
         }
 
-        $responseJson->setData(
-            $result
-        );
-        return $responseJson;
+        return $this->resultRedirectFactory->create()->setUrl($refererUrl);
     }
 
-    private function _sendEmail($comment){
-
-        $this->inlineTranslation->suspend();
+    /**
+     * @param $comment
+     * @return bool
+     */
+    public function _sendEmail($comment)
+    {
         $result = true;
+
         try {
-            $transport = $this->_transportBuilder
-                ->setTemplateIdentifier($this->_helper->getConfigData('lookingfor/email/email_template'))
-                ->setTemplateOptions(
-                    [
-                        'area' => \Magento\Framework\App\Area::AREA_FRONTEND, // this is using frontend area to get the template file
-                        'store' => \Magento\Store\Model\Store::DEFAULT_STORE_ID,
-                    ]
-                )
-                ->setTemplateVars(['comment' => $comment])
-                ->setFrom($this->_helper->getConfigData('lookingfor/email/sender_email_identity'))
-                ->addTo($this->_helper->getConfigData('lookingfor/email/recipient_email'))
-                ->getTransport();
+            $recipientEmail = $this->_helper->getConfigData('productenquiry/email/recipient_email');
+            if (!$recipientEmail) {
+                throw new Exception("Recipient email is not configured.");
+            }
+            $senderIdentity = $this->_helper->getConfigData('productenquiry/email/sender_email_identity');
+            $sender = ['name' => $this->scopeConfig->getValue("trans_email/ident_{$senderIdentity}/name"), 'email' => $this->scopeConfig->getValue("trans_email/ident_{$senderIdentity}/email")];
+            $templateId = $this->_helper->getConfigData('productenquiry/email/email_template');
+            $transport = $this->_transportBuilder->setTemplateIdentifier($templateId)->setTemplateOptions(['area' => Area::AREA_FRONTEND, 'store' => Store::DEFAULT_STORE_ID,])->setTemplateVars(['comment' => $comment])->setFromByScope($sender)->addTo($recipientEmail)->getTransport();
             $transport->sendMessage();
 
-            $this->inlineTranslation->resume();
-        } catch (\Exception $e) {
-            $this->inlineTranslation->resume();
+        } catch (Exception $e) {
             $result = false;
+            // Optionally log: error_log($e->getMessage());
         }
+
         return $result;
     }
 }
